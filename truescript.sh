@@ -29,7 +29,7 @@ fi
 
 number_of_backups=0
 restore="false"
-timeout=0
+timeout=300
 mount="false"
 sync="false"
 prune="false"
@@ -46,8 +46,7 @@ do
       echo "-r | Opens a menu to restore a TrueScript backup that was taken on you ix-applications pool"
       echo "-b | Back-up your ix-applications dataset, specify a number after -b"
       echo "-i | Add application to ignore list, one by one, see example below."
-      echo "-t | Set a custom timeout in seconds for -u or -U: This is the ammount of time the script will wait for an application to go from DEPLOYING to ACTIVE"
-      echo "-t | Set a custom timeout in seconds for -m: Amount of time script will wait for applications to stop, before timing out"
+      echo "-t | Set a custom timeout in seconds when checking if either an App or Mountpoint correctly Started, Stopped or (un)Mounted. Defaults to 300 seconds"
       echo "-s | sync catalog"
       echo "-U | Update all applications, ignores versions"
       echo "-u | Update all applications, does not update Major releases"
