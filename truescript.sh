@@ -52,8 +52,7 @@ do
             echo "-U | Update all applications, ignores versions"
             echo "-u | Update all applications, does not update Major releases"
             echo "-p | Prune unused/old docker images"
-            #TODO: Enable when we support stopping before updates
-            #echo "-s | Stop App before attempting update"
+            echo "-s | Stop App before attempting update"
             echo "EX | bash TrueScript.sh -b 14 -i portainer -i arch -i sonarr -i radarr -t 600 -sUp"
             echo "EX | bash /mnt/tank/scripts/TrueScript.sh -t 8812 -m"
             exit
@@ -108,10 +107,10 @@ done
 backup(){
   date=$(date '+%Y_%m_%d_%H_%M_%S')
   cli -c 'app kubernetes backup_chart_releases backup_name=''"'TrueScript_"$date"'"'
-  mapfile -t list_backups < <(cli -c 'app kubernetes list_backups' | grep "TrueTool_\|HeavyScript_\|TrueScript_" | sort -nr | awk -F '|'  '{print $2}'| tr -d " \t\r")
+  mapfile -t list_backups < <(cli -c 'app kubernetes list_backups' | grep "HeavyScript_\|TrueScript_" | sort -nr | awk -F '|'  '{print $2}'| tr -d " \t\r")
   if [[  ${#list_backups[@]}  -gt  "number_of_backups" ]]; then
   overflow=$(expr ${#list_backups[@]} - $number_of_backups)
-  echo && mapfile -t list_overflow < <(cli -c 'app kubernetes list_backups' | grep "HeavyScript_"  | sort -nr | awk -F '|'  '{print $2}'| tr -d " \t\r" | tail -n "$overflow")
+  echo && mapfile -t list_overflow < <(cli -c 'app kubernetes list_backups' | grep "HeavyScript_\|TrueScript_"  | sort -nr | awk -F '|'  '{print $2}'| tr -d " \t\r" | tail -n "$overflow")
   for i in "${list_overflow[@]}"
   do
       cli -c 'app kubernetes delete_backup backup_name=''"'"$i"'"' &> /dev/null && echo -e "Deleting your oldest backup $i\nThis is to remain in the $number_of_backups backups range you set. " || echo "Failed to delete $i"
@@ -207,10 +206,12 @@ update_apps(){
                           echo -e "\n$n\nIgnored, skipping"
                           continue
                         elif [[ "$tt" == "$av" || $update_all_apps == "true" ]]; then
-                          if [[ "$status"  ==  "ACTIVE" || "$status"  ==  "DEPLOYING" ]]; then
-						          #TODO: Add stop before update option
-                                  echo -e "\n$n\nUpdating" && cli -c 'app chart_release upgrade release_name=''"'"$n"'"' &> /dev/null && echo -e "Updated\n$ov\n$nv" || echo "FAILED"
-                                  continue
+                          if [[ "$status" !=  "STOPPED" ]]; then
+                            if [[ $stop_before_update == "true" ]]; then
+                              echo "Stopping App prior to update..." && midclt call chart.release.scale "$n" '{"replica_count": 0}' &> /dev/null && echo "Stopped"|| echo -e "FAILED"     
+                            fi
+                            echo -e "\n$n\nUpdating" && cli -c 'app chart_release upgrade release_name=''"'"$n"'"' &> /dev/null && echo -e "Updated\n$ov\n$nv" || { echo "FAILED"; continue; }
+                            continue
                           elif [[ "$status"  ==  "STOPPED" ]]; then
                               echo -e "\n$n\nUpdating" && cli -c 'app chart_release upgrade release_name=''"'"$n"'"' &> /dev/null && echo -e "Updated\n$ov\n$nv\nWas Stopped, Beginning Stop Loop" && SECONDS=0 || { echo "FAILED"; continue; }
                               while [[ "$status"  !=  "ACTIVE" ]]
