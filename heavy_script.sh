@@ -6,7 +6,6 @@ BRANCH=$(git rev-parse --abbrev-ref HEAD)
 git fetch 2>&1 >/dev/null
 git update-index -q --refresh 2>&1 >/dev/null
 if [[ `git status --porcelain` ]]; then
-then
     echo "script requires update"
     git reset --hard 2>&1 >/dev/null
     git checkout $BRANCH 2>&1 >/dev/null
