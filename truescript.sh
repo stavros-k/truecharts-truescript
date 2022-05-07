@@ -243,9 +243,8 @@ update_apps(){
                 break
               fi
             done
-            if [[ "$failure"  ==  "true" ]];then
-              #TODO: Execute/check/test code to revert App update
-              cli -c 'app chart_release rollback release_name=''"'"$n"'" item_version="'"$oav"'"'
+            if [[ "$failure"  ==  "true" ]]; then
+              midclt call chart.release.rollback "$n" "{\"item_version\": \"$oav\"}"
             fi
             else
               echo -e "\n$n\nMajor Release, update manually"
