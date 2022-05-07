@@ -129,7 +129,6 @@ restore(){
   else
       echo "Invalid Selection"
   fi
-  ;;
 }
 export -f restore
 
