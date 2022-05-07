@@ -11,31 +11,31 @@ if [[ `git status --porcelain` ]]; then
     git checkout $BRANCH 2>&1 >/dev/null
     git pull 2>&1 >/dev/null
     echo "script updated"
-    if [[ "$CHANGED" == "TRUE" ]]; then
+    if [[ "$CHANGED" == "true" ]]; then
       echo "LOOP DETECTED, exiting" 
       exit 1
     else
       echo "restarting script after update..."
-      export CHANGED="TRUE"
+      export CHANGED="true"
       . $dir/truescript.sh
     fi
 else
     echo "script up-to-date"
-    export CHANGED="FALSE"
+    export CHANGED="false"
 fi
 
 #If no argument is passed, kill the script.
 [[ -z "$*" ]] && echo "This script requires an arguent, use -h for help" && exit
 
 number_of_backups=0
-restore="FALSE"
+restore="false"
 timeout=0
-mount="FALSE"
-sync="FALSE"
-prune="FALSE"
-update_apps="FALSE"
-update_all_apps="FALSE"
-stop_before_update="FALSE"
+mount="false"
+sync="false"
+prune="false"
+update_apps="false"
+update_all_apps="false"
+stop_before_update="false"
 
 while getopts ":hsi:mrb:t:uUp" opt
 do
@@ -73,7 +73,7 @@ do
             echo -e "\nNumber of backups was set to $number_of_backups"
             ;;
         r)
-            restore="TRUE"
+            restore="true"
             ;;
         i)
             ignore+="$OPTARG"
@@ -85,22 +85,22 @@ do
             echo -e "\nTimeout was set to $timeout"
             ;;
         m)
-            mount="TRUE"
+            mount="true"
             ;;
         s)
-            sync="TRUE"
+            sync="true"
             ;;
         U)
-            update_all_apps="TRUE"
+            update_all_apps="true"
             ;;
         u)
-            update_apps="TRUE"
+            update_apps="true"
             ;;
         s)
-            stop_before_update="TRUE"
+            stop_before_update="true"
             ;;
         p)
-            prune="TRUE"
+            prune="true"
             ;;
     esac
 done
@@ -206,7 +206,7 @@ update_apps(){
                         if [[ "${ignore[*]}"  ==  *"${n}"* ]]; then
                           echo -e "\n$n\nIgnored, skipping"
                           continue
-                        elif [[ "$tt" == "$av" || $update_all_apps == "TRUE" ]]; then
+                        elif [[ "$tt" == "$av" || $update_all_apps == "true" ]]; then
                           if [[ "$status"  ==  "ACTIVE" || "$status"  ==  "DEPLOYING" ]]; then
 						          #TODO: Add stop before update option
                                   echo -e "\n$n\nUpdating" && cli -c 'app chart_release upgrade release_name=''"'"$n"'"' &> /dev/null && echo -e "Updated\n$ov\n$nv" || echo "FAILED"
@@ -239,7 +239,7 @@ update_apps(){
 }
 export -f update_apps
 
-if [[$restore == "TRUE"]]; then
+if [[$restore == "true"]]; then
   restore
   exit
 fi
@@ -248,25 +248,25 @@ if [[$number_of_backups -gt 0]]; then
   backup
 fi
 
-if [[$mount == "TRUE"]]; then
+if [[$mount == "true"]]; then
   mount
   exit
 fi
 
-if [[$sync == "TRUE"]]; then
+if [[$sync == "true"]]; then
   sync
 fi
 
-if [[$prune == "TRUE"]]; then
+if [[$prune == "true"]]; then
   prune
 fi
 
-if [[$update_all_apps == "TRUE"]]; then
+if [[$update_all_apps == "true"]]; then
   update_apps
-elif [[$update_apps == "TRUE"]]; then
+elif [[$update_apps == "true"]]; then
   update_apps
 fi
 
-if [[$prune == "TRUE"]]; then
+if [[$prune == "true"]]; then
   prune
 fi
