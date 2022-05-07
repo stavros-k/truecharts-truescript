@@ -17,6 +17,6 @@ then
 else
     echo "script up-to-date"
 fi
-chmod +x $dir/heavy_script.sh.sh
+chmod +x $dir/heavy_script.sh
 chmod +x $dir/truescript.sh
 $dir/truescript.sh
