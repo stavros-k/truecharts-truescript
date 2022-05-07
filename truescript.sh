@@ -16,8 +16,8 @@ if [[ `git status --porcelain` ]]; then
       exit 1
     else
       echo "restarting script after update..."
-      . $dir/truescript.sh
       export CHANGED="TRUE"
+      . $dir/truescript.sh
     fi
 else
     echo "script up-to-date"
