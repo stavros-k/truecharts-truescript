@@ -60,10 +60,12 @@ do
             ;;
         \?)
             echo "Invalid Option -$OPTARG, type -h for help"
-            exit;;
+            exit
+            ;;
         :)
             echo "Option: -$OPTARG requires an argument" >&2
-            exit;;
+            exit
+            ;;
         b)
             re='^[0-9]+$'
             ! [[ $OPTARG =~ $re  ]] && echo -e "Error: -b needs to be assigned an interger\n$number_of_backups is not an interger" >&2 && exit
@@ -98,7 +100,8 @@ do
             stop_before_update="TRUE"
             ;;
         p)
-          prune="TRUE"
+            prune="TRUE"
+            ;;
     esac
 done
 
