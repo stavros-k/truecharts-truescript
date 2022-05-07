@@ -10,6 +10,4 @@ git reset --hard 2>&1 >/dev/null
 git checkout $BRANCH 2>&1 >/dev/null
 git pull 2>&1 >/dev/null
 echo "script updated"
-chmod +x $dir/heavy_script.sh
-chmod +x $dir/truescript.sh
 $dir/truescript.sh
