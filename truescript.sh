@@ -11,11 +11,11 @@ if [[ `git status --porcelain` ]]; then
     git checkout $BRANCH 2>&1 >/dev/null
     git pull 2>&1 >/dev/null
     echo "script updated"
+    . $dir/truescript.sh
     
 else
     echo "script up-to-date"
 fi
-$dir/truescript.sh
 
 #If no argument is passed, kill the script.
 [[ -z "$*" ]] && echo "This script requires an arguent, use -h for help" && exit
