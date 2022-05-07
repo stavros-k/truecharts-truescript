@@ -12,7 +12,7 @@ if [[ `git status --porcelain` ]]; then
     git pull 2>&1 >/dev/null
     echo "script updated"
     export CHANGED="TRUE"
-    if ["$CHANGED" == "TRUE"]; then
+    if [["$CHANGED" -eq "TRUE"]]; then
       echo "LOOP DETECTED, exiting" 
       exit 1
     else
