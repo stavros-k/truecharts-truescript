@@ -72,6 +72,7 @@ do
             ;;
         r)
             restore="TRUE"
+            ;;
         i)
             ignore+="$OPTARG"
             ;;
