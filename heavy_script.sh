@@ -1,5 +1,22 @@
 #!/bin/bash
 
+git remote set-url origin https://github.com/truecharts/truescript.git
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+git fetch
+git update-index -q --refresh
+CHANGED=$(git diff --name-only origin/$BRANCH)
+if [ ! -z "$CHANGED" ];
+then
+    echo "script requires update"
+    git reset --hard
+    git checkout $BRANCH
+    git pull
+    echo "script updated"
+    exit 1
+else
+    echo "script up-to-date"
+fi
+
 #If no argument is passed, kill the script.
 [[ -z "$*" ]] && echo "This script requires an arguent, use -h for help" && exit
 
