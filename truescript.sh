@@ -232,20 +232,19 @@ update_apps(){
                 fi
               done
             fi
-            timer=$timeout
+            SECONDS=0
             failure="false"
             while [[ "$status"  ==  "DEPLOYING" ]]
             do
               status=$(cli -m csv -c 'app chart_release query name,update_available,human_version,human_latest_version,status' | grep "$n" | awk -F ',' '{print $2}')
-              if [[ "$timer" -ge "$timeout" ]]; then
+              if [[ "$SECONDS" -ge "$timeout" ]]; then
                 echo -e "Error: Timeout exceeded, App did not start in time after update..."
                 failure="true"
                 break
               fi
-              timer=timer-1
             done
             if [[ "$failure"  ==  "true" ]];then
-              #TODO: Execute code to revert App update
+              #TODO: Execute/check/test code to revert App update
               cli -c 'app chart_release rollback release_name=''"'"$n"'" item_version="'"$oav"'"'
             fi
             else
