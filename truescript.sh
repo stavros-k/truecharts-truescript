@@ -14,6 +14,7 @@ if [[ `git status --porcelain` ]]; then
     export CHANGED="TRUE"
     if ["$CHANGED" == "TRUE"]; then
       echo "LOOP DETECTED, exiting" 
+      exit 1
     else
       echo "restarting script after update..."
       . $dir/truescript.sh
