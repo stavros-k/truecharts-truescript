@@ -239,7 +239,7 @@ update_apps(){
 }
 export -f update_apps
 
-if [[$restore == "true"]]; then
+if [$restore == "true"]; then
   restore
   exit
 fi
@@ -248,25 +248,25 @@ if [[$number_of_backups -gt 0]]; then
   backup
 fi
 
-if [[$mount == "true"]]; then
+if [$mount == "true"]; then
   mount
   exit
 fi
 
-if [[$sync == "true"]]; then
+if [$sync == "true"]; then
   sync
 fi
 
-if [[$prune == "true"]]; then
+if [$prune == "true"]; then
   prune
 fi
 
-if [[$update_all_apps == "true"]]; then
+if [$update_all_apps == "true"]; then
   update_apps
-elif [[$update_apps == "true"]]; then
+elif [$update_apps == "true"]; then
   update_apps
 fi
 
-if [[$prune == "true"]]; then
+if [$prune == "true"]; then
   prune
 fi
