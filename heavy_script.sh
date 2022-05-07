@@ -5,9 +5,7 @@ git remote set-url origin https://github.com/truecharts/truescript.git 2>&1 >/de
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 git fetch 2>&1 >/dev/null
 git update-index -q --refresh 2>&1 >/dev/null
-CHANGED=""
-CHANGED=$(git diff --name-only origin/$BRANCH)
-if [ ! -z "$CHANGED" ];
+if [[ `git status --porcelain` ]]; then
 then
     echo "script requires update"
     git reset --hard 2>&1 >/dev/null
