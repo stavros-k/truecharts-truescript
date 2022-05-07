@@ -15,8 +15,6 @@ if [[ `git status --porcelain` ]]; then
 else
     echo "script up-to-date"
 fi
-chmod +x $dir/heavy_script.sh
-chmod +x $dir/truescript.sh
 $dir/truescript.sh
 
 #If no argument is passed, kill the script.
