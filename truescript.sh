@@ -11,8 +11,13 @@ if [[ `git status --porcelain` ]]; then
     git checkout $BRANCH 2>&1 >/dev/null
     git pull 2>&1 >/dev/null
     echo "script updated"
-    . $dir/truescript.sh
-    
+    export CHANGED="TRUE"
+    if ["$CHANGED" == "TRUE"]; then
+      echo "LOOP DETECTED, exiting" 
+    else
+      echo "restarting script after update..."
+      . $dir/truescript.sh
+    then
 else
     echo "script up-to-date"
 fi
