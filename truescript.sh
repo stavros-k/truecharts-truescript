@@ -37,7 +37,7 @@ update_apps="false"
 update_all_apps="false"
 stop_before_update="false"
 
-while getopts ":hsi:mrb:t:uUp" opt
+while getopts ":hsi:mrb:t:uUpS" opt
 do
   case $opt in
     h)
@@ -48,6 +48,7 @@ do
       echo "-i | Add application to ignore list, one by one, see example below."
       echo "-t | Set a custom timeout in seconds when checking if either an App or Mountpoint correctly Started, Stopped or (un)Mounted. Defaults to 300 seconds"
       echo "-s | sync catalog"
+      echo "-S | Stops App before update with -u or -U and restarts afterwards"
       echo "-U | Update all applications, ignores versions"
       echo "-u | Update all applications, does not update Major releases"
       echo "-p | Prune unused/old docker images"
@@ -94,7 +95,7 @@ do
     u)
       update_apps="true"
       ;;
-    s)
+    S)
       stop_before_update="true"
       ;;
     p)
