@@ -12,7 +12,7 @@ if [[ `git status --porcelain` ]]; then
   git pull 2>&1 >/dev/null
   echo "script updated"
   if [[ "$CHANGED" == "true" ]]; then
-  echo "LOOP DETECTED, exiting" 
+  echo "LOOP DETECTED, exiting"
   exit 1
   else
   echo "restarting script after update..."
@@ -75,13 +75,12 @@ do
       restore="true"
       ;;
     i)
-      ignore+="$OPTARG"
+      ignore+=("$OPTARG")
       ;;
     t)
       re='^[0-9]+$'
       ! [[ $timeout =~ $re ]] && echo -e "Error: -t needs to be assigned an interger\n$timeout is not an interger" >&2 && exit
       timeout=$OPTARG
-      echo -e "\nTimeout was set to $timeout"
       ;;
     m)
       mount="true"
@@ -107,10 +106,10 @@ done
 backup(){
 date=$(date '+%Y_%m_%d_%H_%M_%S')
 cli -c 'app kubernetes backup_chart_releases backup_name=''"'TrueScript_"$date"'"'
-mapfile -t list_backups < <(cli -c 'app kubernetes list_backups' | grep "HeavyScript_\|TrueScript_" | sort -nr | awk -F '|'  '{print $2}'| tr -d " \t\r")
+mapfile -t list_backups < <(cli -c 'app kubernetes list_backups' | grep "HeavyScript_\|TrueScript_" | sort -Vr | awk -F '|'  '{print $2}'| tr -d " \t\r")
 if [[  ${#list_backups[@]}  -gt  "number_of_backups" ]]; then
   overflow=$(expr ${#list_backups[@]} - $number_of_backups)
-  echo && mapfile -t list_overflow < <(cli -c 'app kubernetes list_backups' | grep "HeavyScript_\|TrueScript_"  | sort -nr | awk -F '|'  '{print $2}'| tr -d " \t\r" | tail -n "$overflow")
+  echo && mapfile -t list_overflow < <(cli -c 'app kubernetes list_backups' | grep "HeavyScript_\|TrueScript_"  | sort -Vr | awk -F '|'  '{print $2}'| tr -d " \t\r" | tail -n "$overflow")
   for i in "${list_overflow[@]}"
   do
     cli -c 'app kubernetes delete_backup backup_name=''"'"$i"'"' &> /dev/null && echo -e "Deleting your oldest backup $i\nThis is to remain in the $number_of_backups backups range you set. " || echo "Failed to delete $i"
@@ -120,7 +119,7 @@ fi
 export -f backup
 
 restore(){
-list_backups=$(cli -c 'app kubernetes list_backups' | grep "TrueTool_\|HeavyScript_\|TrueScript_" | sort -rn | tr -d " \t\r"  | awk -F '|'  '{print NR-1, $2}' | column -t) && echo "$list_backups" && read -p "Please type a number: " selection && restore_point=$(echo "$list_backups" | grep ^"$selection" | awk '{print $2}') && echo -e "\nThis is NOT guranteed to work\nThis is ONLY supposed to be used as a LAST RESORT\nConsider rolling back your applications instead if possible.\n\nYou have chosen to restore $restore_point\nWould you like to continue?"  && echo -e "1  Yes\n2  No" && read -p "Please type a number: " yesno || { echo "FAILED"; exit; }
+list_backups=$(cli -c 'app kubernetes list_backups' | grep "TrueTool_\|HeavyScript_\|TrueScript_" | sort -rV | tr -d " \t\r"  | awk -F '|'  '{print NR-1, $2}' | column -t) && echo "$list_backups" && read -p "Please type a number: " selection && restore_point=$(echo "$list_backups" | grep ^"$selection" | awk '{print $2}') && echo -e "\nThis is NOT guranteed to work\nThis is ONLY supposed to be used as a LAST RESORT\nConsider rolling back your applications instead if possible.\n\nYou have chosen to restore $restore_point\nWould you like to continue?"  && echo -e "1  Yes\n2  No" && read -p "Please type a number: " yesno || { echo "FAILED"; exit; }
 if [[ $yesno == "1" ]]; then
   echo -e "\nStarting Backup, this will take a LONG time." && cli -c 'app kubernetes restore_backup backup_name=''"'"$restore_point"'"' || echo "Restore FAILED"
 elif [[ $yesno == "2" ]]; then
@@ -142,8 +141,8 @@ if [[ $selection == "1" ]]; then
   pvc=$(echo -e "$list" | grep ^"$selection" || echo -e "\nInvalid selection")
   status=$(cli -m csv -c 'app chart_release query name,status' | grep -E "(,|^)$app(,|$)" | awk -F ',' '{print $2}'| tr -d " \t\n\r")
   if [[ "$status" != "STOPPED" ]]; then
-    [[ -z $timeout ]] && echo -e "\nSetting Default Timeout to 300\nChange timeout with -t" && timeout=300 || echo -e "\nTimeout was set to $timeout"
-    SECONDS=0 && echo -e "\nScaling down $app" && midclt call chart.release.scale "$app" '{"replica_count": 0}' &> /dev/null 
+    [[ -z $timeout ]] && echo -e "\nSetting Default Timeout to 300\nChange timeout with -t" || echo -e "\nTimeout was set to $timeout"
+    SECONDS=0 && echo -e "\nScaling down $app" && midclt call chart.release.scale "$app" '{"replica_count": 0}' &> /dev/null
   else
     echo -e "\n$app is already stopped"
   fi
@@ -157,7 +156,7 @@ if [[ $selection == "1" ]]; then
   volume_name=$(echo "$pvc" | awk '{print $4}')
   full_path=$(zfs list | grep $volume_name | awk '{print $1}')
   echo -e "\nMounting\n"$full_path"\nTo\n/mnt/temporary/$data_name" && zfs set mountpoint=/temporary/"$data_name" "$full_path" && echo -e "Mounted\n\nUnmount with the following command\nzfs set mountpoint=legacy "$full_path" && rmdir /mnt/temporary/"$data_name"\nOr use the Unmount All option\n"
-  break
+  exit
 elif [[ $selection == "2" ]]; then
   mapfile -t unmount_array < <(basename -a /mnt/temporary/* | sed "s/*//")
   [[ -z $unmount_array ]] && echo "Theres nothing to unmount" && exit
@@ -180,77 +179,89 @@ sync(){
 echo -e "\nSyncing all catalogs, please wait.." && cli -c 'app catalog sync_all' &> /dev/null && echo -e "Catalog sync complete"
 }
 export -f sync
-  
+
 prune(){
 echo -e "\nPruning Docker Images" && docker image prune -af | grep Total || echo "Failed to Prune Docker Images"
 }
 export -f prune
 
 update_apps(){
-      mapfile -t array < <(cli -m csv -c 'app chart_release query name,update_available,human_version,human_latest_version,container_images_update_available,status' | grep ",true" | sort)
-      [[ -z $array ]] && echo -e "\nThere are no updates available" && continue || echo -e "\n${#array[@]} update(s) available"
-      [[ -z $timeout ]] && echo -e "\nSetting Default Timeout to 300\nChange timeout with -t" && timeout=300 || echo -e "\nTimeout was set to $timeout"
+    mapfile -t array < <(cli -m csv -c 'app chart_release query name,update_available,human_version,human_latest_version,container_images_update_available,status' | grep ",true" | sort)
+    [[ -z $array ]] && echo -e "\nThere are no updates available" || echo -e "\n${#array[@]} update(s) available"
+    [[ -z $timeout ]] && echo -e "\nSetting Default Timeout to 300\nChange timeout with -t" && timeout=300 || echo -e "\nTimeout was set to $timeout"
         for i in "${array[@]}"
-          do
-            n=$(echo "$i" | awk -F ',' '{print $1}') #print out first catagory, name.
-            ottv=$(echo "$i" | awk -F ',' '{print $4}' | awk -F '_' '{print $1}' | awk -F '.' '{print $1}') #previous Truecharts version
-            nttv=$(echo "$i" | awk -F ',' '{print $5}' | awk -F '_' '{print $1}' | awk -F '.' '{print $1}') #previous version) #New Truecharts Version
-            oav=$(echo "$i" | awk -F ',' '{print $4}' | awk -F '_' '{print $2}' | awk -F '.' '{print $1}') #previous version) #New App Version
-            nav=$(echo "$i" | awk -F ',' '{print $5}' | awk -F '_' '{print $2}' | awk -F '.' '{print $1}') #previous version) #New App Version
-            status=$(echo "$i" | awk -F ',' '{print $2}') #status of the app: STOPPED / DEPLOYING / ACTIVE
-            tt=$(diff <(echo "$ottv") <(echo "$nttv")) #caluclating difference in major Truecharts versions
-            av=$(diff <(echo "$oav") <(echo "$nav")) #caluclating difference in major app versions
-            ov=$(echo "$i" | awk -F ',' '{print $4}') #Upgraded From
-            nv=$(echo "$i" | awk -F ',' '{print $5}') #Upraded To
-            if [[ "${ignore[*]}"  ==  *"${n}"* ]]; then
-            echo -e "\n$n\nIgnored, skipping"
-            continue
-            elif [[ "$tt" == "$av" || $update_all_apps == "true" ]]; then
-            if [[ "$status" !=  "STOPPED" ]]; then
-              if [[ $stop_before_update == "true" ]]; then
-                echo "Stopping App prior to update..." && midclt call chart.release.scale "$n" '{"replica_count": 0}' &> /dev/null && echo "Stopped"|| echo -e "FAILED"     
-              fi
-              echo -e "\n$n\nUpdating" && cli -c 'app chart_release upgrade release_name=''"'"$n"'"' &> /dev/null && echo -e "Updated\n$ov\n$nv" || { echo "FAILED"; continue; }
-              continue
-            elif [[ "$status"  ==  "STOPPED" ]]; then
-              echo -e "\n$n\nUpdating" && cli -c 'app chart_release upgrade release_name=''"'"$n"'"' &> /dev/null && echo -e "Updated\n$ov\n$nv\nWas Stopped, Beginning Stop Loop" && SECONDS=0 || { echo "FAILED"; continue; }
-              while [[ "$status"  !=  "ACTIVE" ]]
-              do
-                status=$(cli -m csv -c 'app chart_release query name,update_available,human_version,human_latest_version,status' | grep "$n" | awk -F ',' '{print $2}')
-                if [[ "$status"  ==  "STOPPED" ]]; then
-                  echo -e "Stopped"
-                  break
-                elif [[ "$SECONDS" -ge "$timeout" && "$status"  ==  "DEPLOYING" ]]; then
-                  echo -e "Error: Run Time($SECONDS) has exceeded Timeout($timeout)\nIf this is a slow starting application, set a higher time with -t\nIf this applicaion is always DEPLOYING, you can disable all probes under the Healthcheck Probes Liveness section in the edit configuration\nNot shutting down application for safety reasons, continuing to next applicaion"
-                  break
-                elif [[ "$status"  ==  "DEPLOYING" ]]; then
-                  echo -e "Waiting $((timeout-SECONDS)) more seconds for $n to be ACTIVE" && sleep 15
-                  continue
-                else
-                  echo "Returing to STOPPED state.." && midclt call chart.release.scale "$n" '{"replica_count": 0}' &> /dev/null && echo "Stopped"|| echo -e "FAILED"
-                  break
-                fi
-              done
-            fi
-            SECONDS=0
-            failure="false"
-            while [[ "$status"  ==  "DEPLOYING" ]]
             do
-              status=$(cli -m csv -c 'app chart_release query name,update_available,human_version,human_latest_version,status' | grep "$n" | awk -F ',' '{print $2}')
-              if [[ "$SECONDS" -ge "$timeout" ]]; then
-                echo -e "Error: Timeout exceeded, App did not start in time after update..."
-                failure="true"
-                break
-              fi
+                n=$(echo "$i" | awk -F ',' '{print $1}') #print out first catagory, name.
+                ottv=$(echo "$i" | awk -F ',' '{print $4}' | awk -F '_' '{print $1}' | awk -F '.' '{print $1}') #previous Truecharts version
+                nttv=$(echo "$i" | awk -F ',' '{print $5}' | awk -F '_' '{print $1}' | awk -F '.' '{print $1}') #previous version) #New Truecharts Version
+                oav=$(echo "$i" | awk -F ',' '{print $4}' | awk -F '_' '{print $2}' | awk -F '.' '{print $1}') #previous version) #New App Version
+                rollback_version=$(echo "$i" | awk -F ',' '{print $4}' | awk -F '_' '{print $2}')
+                nav=$(echo "$i" | awk -F ',' '{print $5}' | awk -F '_' '{print $2}' | awk -F '.' '{print $1}') #previous version) #New App Version
+                status=$(echo "$i" | awk -F ',' '{print $2}') #status of the app: STOPPED / DEPLOYING / ACTIVE
+                tt=$(diff <(echo "$ottv") <(echo "$nttv")) #caluclating difference in major Truecharts versions
+                av=$(diff <(echo "$oav") <(echo "$nav")) #caluclating difference in major app versions
+                ov=$(echo "$i" | awk -F ',' '{print $4}') #Upgraded From
+                nv=$(echo "$i" | awk -F ',' '{print $5}') #Upraded To
+                [[ "${ignore[*]}"  ==  *"${n}"* ]] && echo -e "\n$n\nIgnored, skipping" && continue
+                if [[ "$tt" == "$av" || "$update_all_apps" == "true" ]]; then #continue to update
+                    if [[ "$status" !=  "STOPPED" ]]; then
+                        if [[ $stop_before_update == "true" ]]; then 
+                            echo -e "\n"$n"\nStopping prior to update..." && midclt call chart.release.scale "$n" '{"replica_count": 0}' &> /dev/null && SECONDS=0 || echo -e "FAILED"
+                            while [[ "$status" !=  "STOPPED" ]]
+                            do
+                                status=$(cli -m csv -c 'app chart_release query name,update_available,human_version,human_latest_version,status' | grep ""$n"," | awk -F ',' '{print $2}')
+                                if [[ "$status"  ==  "STOPPED" ]]; then
+                                    echo "Successfully Stopped"
+                                    echo "Updating..." && cli -c 'app chart_release upgrade release_name=''"'"$n"'"' &> /dev/null && echo -e "Updated\n$ov\n$nv" || { echo "FAILED"; continue; }
+                                    continue
+                                elif [[ "$SECONDS" -ge "$timeout" ]]; then
+                                    echo "Error: Run Time($SECONDS) has exceeded Timeout($timeout)"
+                                    break
+                                elif [[ "$status" !=  "STOPPED" ]]; then
+                                    echo "Waiting $((timeout-SECONDS)) more seconds for $n to be STOPPED" && sleep 15
+                                    continue
+                                fi
+                            done
+                        else
+                            echo -e "\n$n\nUpdating" && cli -c 'app chart_release upgrade release_name=''"'"$n"'"' &> /dev/null && echo -e "Updated\n$ov\n$nv\nWas Stopped, Beginning Stop Loop" && SECONDS=0 || { echo "FAILED"; continue; }
+                        fi
+                    elif [[ "$status"  ==  "STOPPED" ]]; then
+                        echo -e "\n$n\nUpdating" && cli -c 'app chart_release upgrade release_name=''"'"$n"'"' &> /dev/null && echo -e "Updated\n$ov\n$nv\nWas Stopped, Beginning Stop Loop" && SECONDS=0 || { echo "FAILED"; continue; }
+                        while [[ "$status"  !=  "ACTIVE" ]]
+                        do
+                            status=$(cli -m csv -c 'app chart_release query name,update_available,human_version,human_latest_version,status' | grep "$n" | awk -F ',' '{print $2}')
+                            if [[ "$status"  ==  "STOPPED" ]]; then
+                                echo -e "Stopped"
+                                break
+                            elif [[ "$SECONDS" -ge "$timeout" && "$status"  ==  "DEPLOYING" ]]; then
+                                echo -e "Error: Run Time($SECONDS) has exceeded Timeout($timeout)\nIf this is a slow starting application, set a higher time with -t\nIf this applicaion is always DEPLOYING, you can disable all probes under the Healthcheck Probes Liveness section in the edit configuration\nNot shutting down application for safety reasons, continuing to next applicaion"
+                                break
+                            elif [[ "$status"  ==  "DEPLOYING" ]]; then
+                                echo -e "Waiting $((timeout-SECONDS)) more seconds for $n to be ACTIVE" && sleep 15
+                                continue
+                            else
+                                echo "Returing to STOPPED state.." && midclt call chart.release.scale "$n" '{"replica_count": 0}' &> /dev/null && echo "Stopped"|| echo -e "FAILED"
+                                break
+                            fi
+                        done
+                    fi
+                # SECONDS=0
+                # failure="false"
+                # while [[ "$status"  ==  "DEPLOYING" ]]
+                # do
+                #     status=$(cli -m csv -c 'app chart_release query name,update_available,human_version,human_latest_version,status' | grep ""$n"," | awk -F ',' '{print $2}')
+                #     if [[ "$SECONDS" -ge "$timeout" ]]; then
+                #         echo -e "Error: Timeout exceeded, App did not start in time after update"
+                #         failure="true"
+                #         break
+                #     fi
+                # done
+                # [[ "$failure"  ==  "true" ]] && midclt call chart.release.rollback "$n" "{\"item_version\": \"$rollback_version\"}" &> /dev/null
+                else
+                    echo -e "\n$n\nMajor Release, update manually"
+                    continue
+                fi
             done
-            if [[ "$failure"  ==  "true" ]]; then
-              midclt call chart.release.rollback "$n" "{\"item_version\": \"$oav\"}"
-            fi
-            else
-              echo -e "\n$n\nMajor Release, update manually"
-              continue
-            fi
-          done
 }
 export -f update_apps
 
