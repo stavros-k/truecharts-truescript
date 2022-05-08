@@ -253,7 +253,7 @@ test_and_revert(){
           [[ "$failure"  ==  "true" ]] && midclt call chart.release.rollback "$1" "{\"item_version\": \"$2\"}" &> /dev/null
           if [[ "$loopprevent" == "true" ]]
             echo "Returing $1 to STOPPED state due to timeout after rollback.." && midclt call chart.release.scale "$n" '{"replica_count": 0}' &> /dev/null && echo "Stopped"|| echo -e "FAILED"
-          if [[ "$3"  ==  "STOPPED" ]]; then
+          elif [[ "$3"  ==  "STOPPED" ]]; then
             loopprevent="true"
             continue
           else
