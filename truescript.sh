@@ -287,10 +287,6 @@ if [ $sync == "true" ]; then
   sync
 fi
 
-if [ $prune == "true" ]; then
-  prune
-fi
-
 if [ $update_all_apps == "true" ]; then
   update_apps
 elif [ $update_apps == "true" ]; then
