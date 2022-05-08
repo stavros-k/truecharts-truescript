@@ -5,7 +5,7 @@ This script can help with:
 - Updating Truenas SCALE applications
 - Backup / Restore `ix-applications` dataset
 - Mount / Unmount `PVC` storage
-- Prune Docker images.
+- Prune Container Images.
 
 ## Usage:
 
@@ -19,7 +19,7 @@ This script can help with:
 | `-s`                | None        | Sync Catalog                                                                                                                                      |
 | `-u`                | None        | Apply all application updates, **except** major verions                                                                                           |
 | `-U`                | None        | Apply all application updates, **including** major verions                                                                                        |
-| `-p`                | None        | Prune unused docker images                                                                                                                        |
+| `-p`                | None        | Prune unused container images                                                                                                                        |
 
 ## Examples
 
@@ -35,7 +35,7 @@ bash /mnt/POOLNAME/PATH/TO/SCRIPT/truescript.sh -b 14 -i portainer -i nextcloud 
 - `-t 600` Will wait for `600` seconds, until an app goes from `Deploying` to `Active` when updating. (or until an app goes from `Active` to `Stopped` when mounting PVC Storage).
 - `-s` Will sync the catalogs before checking for updates.
 - `-u` Update only apps that do NOT have **major** updates.
-- `-p` Prune docker images.
+- `-p` Prune container images.
 
 **Example for mounting `PVC` Storage**
 
