@@ -205,7 +205,7 @@ update_apps(){
                 [[ "${ignore[*]}"  ==  *"${n}"* ]] && echo -e "\n$n\nIgnored, skipping" && continue
                 if [[ "$tt" == "$av" || "$update_all_apps" == "true" ]]; then #continue to update
                   startstatus=$status
-                  if [[ $stop_before_update == "true" ]]; then 
+                  if [[ $stop_before_update == "true" ]]; then
                       echo -e "\n"$n"\nStopping prior to update..." && midclt call chart.release.scale "$n" '{"replica_count": 0}' &> /dev/null && SECONDS=0 || echo -e "FAILED"
                       while [[ "$status" !=  "STOPPED" ]]
                       do
