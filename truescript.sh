@@ -204,66 +204,62 @@ update_apps(){
                 nv=$(echo "$i" | awk -F ',' '{print $5}') #Upraded To
                 [[ "${ignore[*]}"  ==  *"${n}"* ]] && echo -e "\n$n\nIgnored, skipping" && continue
                 if [[ "$tt" == "$av" || "$update_all_apps" == "true" ]]; then #continue to update
-                    if [[ "$status" !=  "STOPPED" ]]; then
-                        if [[ $stop_before_update == "true" ]]; then 
-                            echo -e "\n"$n"\nStopping prior to update..." && midclt call chart.release.scale "$n" '{"replica_count": 0}' &> /dev/null && SECONDS=0 || echo -e "FAILED"
-                            while [[ "$status" !=  "STOPPED" ]]
-                            do
-                                status=$(cli -m csv -c 'app chart_release query name,update_available,human_version,human_latest_version,status' | grep ""$n"," | awk -F ',' '{print $2}')
-                                if [[ "$status"  ==  "STOPPED" ]]; then
-                                    echo "Successfully Stopped"
-                                    echo "Updating..." && cli -c 'app chart_release upgrade release_name=''"'"$n"'"' &> /dev/null && echo -e "Updated\n$ov\n$nv" || { echo "FAILED"; continue; }
-                                    continue
-                                elif [[ "$SECONDS" -ge "$timeout" ]]; then
-                                    echo "Error: Run Time($SECONDS) has exceeded Timeout($timeout)"
-                                    break
-                                elif [[ "$status" !=  "STOPPED" ]]; then
-                                    echo "Waiting $((timeout-SECONDS)) more seconds for $n to be STOPPED" && sleep 15
-                                    continue
-                                fi
-                            done
-                        else
-                            echo -e "\n$n\nUpdating" && cli -c 'app chart_release upgrade release_name=''"'"$n"'"' &> /dev/null && echo -e "Updated\n$ov\n$nv\nWas Stopped, Beginning Stop Loop" && SECONDS=0 || { echo "FAILED"; continue; }
-                        fi
-                    elif [[ "$status"  ==  "STOPPED" ]]; then
-                        echo -e "\n$n\nUpdating" && cli -c 'app chart_release upgrade release_name=''"'"$n"'"' &> /dev/null && echo -e "Updated\n$ov\n$nv\nWas Stopped, Beginning Stop Loop" && SECONDS=0 || { echo "FAILED"; continue; }
-                        while [[ "$status"  !=  "ACTIVE" ]]
-                        do
-                            status=$(cli -m csv -c 'app chart_release query name,update_available,human_version,human_latest_version,status' | grep "$n" | awk -F ',' '{print $2}')
-                            if [[ "$status"  ==  "STOPPED" ]]; then
-                                echo -e "Stopped"
-                                break
-                            elif [[ "$SECONDS" -ge "$timeout" && "$status"  ==  "DEPLOYING" ]]; then
-                                echo -e "Error: Run Time($SECONDS) has exceeded Timeout($timeout)\nIf this is a slow starting application, set a higher time with -t\nIf this applicaion is always DEPLOYING, you can disable all probes under the Healthcheck Probes Liveness section in the edit configuration\nNot shutting down application for safety reasons, continuing to next applicaion"
-                                break
-                            elif [[ "$status"  ==  "DEPLOYING" ]]; then
-                                echo -e "Waiting $((timeout-SECONDS)) more seconds for $n to be ACTIVE" && sleep 15
-                                continue
-                            else
-                                echo "Returing to STOPPED state.." && midclt call chart.release.scale "$n" '{"replica_count": 0}' &> /dev/null && echo "Stopped"|| echo -e "FAILED"
-                                break
-                            fi
-                        done
-                    fi
-                # SECONDS=0
-                # failure="false"
-                # while [[ "$status"  ==  "DEPLOYING" ]]
-                # do
-                #     status=$(cli -m csv -c 'app chart_release query name,update_available,human_version,human_latest_version,status' | grep ""$n"," | awk -F ',' '{print $2}')
-                #     if [[ "$SECONDS" -ge "$timeout" ]]; then
-                #         echo -e "Error: Timeout exceeded, App did not start in time after update"
-                #         failure="true"
-                #         break
-                #     fi
-                # done
-                # [[ "$failure"  ==  "true" ]] && midclt call chart.release.rollback "$n" "{\"item_version\": \"$rollback_version\"}" &> /dev/null
-                else
-                    echo -e "\n$n\nMajor Release, update manually"
-                    continue
-                fi
+                  startstatus=$status
+                  if [[ $stop_before_update == "true" ]]; then 
+                      echo -e "\n"$n"\nStopping prior to update..." && midclt call chart.release.scale "$n" '{"replica_count": 0}' &> /dev/null && SECONDS=0 || echo -e "FAILED"
+                      while [[ "$status" !=  "STOPPED" ]]
+                      do
+                          status=$(cli -m csv -c 'app chart_release query name,update_available,human_version,human_latest_version,status' | grep ""$n"," | awk -F ',' '{print $2}')
+                          if [[ "$status"  ==  "STOPPED" ]]; then
+                              echo "Successfully Stopped"
+                              echo "Updating..." && cli -c 'app chart_release upgrade release_name=''"'"$n"'"' &> /dev/null && echo -e "Updated\n$ov\n$nv" || { echo "FAILED"; continue; }
+                              continue
+                          elif [[ "$SECONDS" -ge "$timeout" ]]; then
+                              echo "Error: Run Time($SECONDS) has exceeded Timeout($timeout)"
+                              break
+                          elif [[ "$status" !=  "STOPPED" ]]; then
+                              echo "Waiting $((timeout-SECONDS)) more seconds for $n to be STOPPED" && sleep 15
+                              continue
+                          fi
+                      done
+                  else
+                      echo -e "\n$n\nUpdating" && cli -c 'app chart_release upgrade release_name=''"'"$n"'"' &> /dev/null && echo -e "Updated\n$ov\n$nv" && SECONDS=0 || { echo "FAILED"; continue; }
+                  fi
+                  test_and_revert $n $rollback_version $startstatus $
+              else
+                  echo -e "\n$n\nMajor Release, update manually"
+                  continue
+              fi
             done
 }
 export -f update_apps
+
+test_and_revert(){
+  ## $1 = App name
+  ## $2 = Rollback version
+  ## $3 = set to the status before update
+  SECONDS=0
+  failure="false"
+  while [[ "$status"  !=  "ACTIVE" ]]
+  do
+      status=$(cli -m csv -c 'app chart_release query name,update_available,human_version,human_latest_version,status' | grep ""$1"," | awk -F ',' '{print $2}')
+      if [[ "$status"  ==  "STOPPED" ]]; then
+          break
+      elif [[ "$SECONDS" -ge "$timeout" && "$status"  ==  "DEPLOYING" ]]; then
+          echo -e "Error: Run Time($SECONDS) has exceeded Timeout($timeout)\nIf this is a slow starting application, set a higher time with -t\nIf this applicaion is always DEPLOYING, you can disable all probes under the Healthcheck Probes Liveness section in the edit configuration\nReverting update..."
+          failure="true"
+          break
+      elif [[ "$status"  ==  "DEPLOYING" ]]; then
+          sleep 15
+          continue
+      elif [[ "$status"  ==  "ACTIVE" && "$3"  ==  "STOPPED" ]]; then
+          echo "Returing to STOPPED state.." && midclt call chart.release.scale "$n" '{"replica_count": 0}' &> /dev/null && echo "Stopped"|| echo -e "FAILED"
+          break
+      fi
+  done
+  [[ "$failure"  ==  "true" ]] && midclt call chart.release.rollback "$1" "{\"item_version\": \"$2\"}" &> /dev/null
+}
+export -f prune
 
 if [ $restore == "true" ]; then
   restore
