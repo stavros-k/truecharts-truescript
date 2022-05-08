@@ -17,7 +17,7 @@ This script can help with:
 | `-i <appname>`      | String      | Add an application to ignore list.                                                                                                                |
 | `-t <seconds>`      | Int         | Set a custom timeout in seconds. This applies to `-u`, `-U` (Timeout from `Deploying` to `Active`) and `-m` (Timeout from `Active` to `Stoppped`) |
 | `-s`                | None        | Sync Catalog                                                                                                                                      |
-| `-u`                | None        | Apply all application updates, **except** major verions                                                                                           |
+| `-u`                | None        | Apply all application updates, **excluding** major verions                                                                                           |
 | `-U`                | None        | Apply all application updates, **including** major verions                                                                                        |
 | `-p`                | None        | Prune unused container images                                                                                                                        |
 
