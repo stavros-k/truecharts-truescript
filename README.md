@@ -1,22 +1,31 @@
-# heavy_script
-Script that can: Update Truenas SCALE applications, Mount and unmount PVC storage, Prune Docker images.
+# TrueScript
 
+This script can help with:
 
-## These arguments can be ran in any order
-- -m | Initiates mounting feature, choose between unmounting and mounting PVC data"
-- -r | Opens a menu to restore a TrueScript backup that was taken on you ix-applications pool"
-- -b | Back-up your ix-applications dataset, specify a number after -b"
-- -i | Add application to ignore list, one by one, see example below."
-- -t | Set a custom timeout in seconds for -u or -U: This is the ammount of time the script will wait for an application to go from DEPLOYING to ACTIVE"
-- -t | Set a custom timeout in seconds for -m: Amount of time script will wait for applications to stop, before timing out"
-- -s | sync catalog"
-- -U | Update all applications, ignores versions"
-- -u | Update all applications, does not update Major releases"
-- -p | Prune unused/old docker images"
+- Updating Truenas SCALE applications
+- Mount / Unmount PVC storage
+- Prune Docker images.
+
+## Usage:
+
+| Flag | Parameters  | Description                                                                                                                                       |
+| ---- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| -m   | None        | Initiates mounting feature, choose between unmounting and mounting PVC data                                                                       |
+| -r   | None        | Opens a menu to select a TrueScript backup to restore that was taken on your `ix-applications` dataset                                            |
+| -b   | Int \| None | Back-up your `ix-applications dataset`. You can also specify a max number of backups to keep after -b                                             |
+| -i   | String      | Add an application to ignore list.                                                                                                                |
+| -t   | Int         | Set a custom timeout in seconds. This applies to `-u`, `-U` (Timeout from `Deploying` to `Active`) and `-m` (Timeout from `Active` to `Stoppped`) |
+| -s   | None        | Sync Catalog                                                                                                                                      |
+| -u   | None        | Apply all application updates, **except** major verions                                                                                           |
+| -U   | None        | Apply all application updates, **including** major verions                                                                                        |
+| -p   | None        | Prune unused docker images                                                                                                                        |
+
 
 
 ### Examples
+
 #### bash truescript.sh -b 14 -i portainer -i arch -i sonarr -i radarr -t 600 -sup
+
 - This is your typical cron job implementation.
 - -b is set to 14. Up to 14 snapshots of your ix-applications dataset will be saved
 - -i is set to ignore portainer, arch, sonarr, and radarr. These applications will be ignored when it comes to updates.
@@ -28,6 +37,6 @@ Script that can: Update Truenas SCALE applications, Mount and unmount PVC storag
 - bash /mnt/tank/scripts/truescript.sh -t 8812 -m
 - bash /mnt/tank/scripts/truescript/truescript.sh -r
 
-
 ### Example Cron Job
-- ```/mnt/speed/scripts/heavy_script/truescript.sh -b 14 -sup```
+
+- `/mnt/speed/scripts/heavy_script/truescript.sh -b 14 -sup`
