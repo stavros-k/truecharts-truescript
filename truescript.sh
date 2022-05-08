@@ -241,6 +241,7 @@ test_and_revert(){
   SECONDS=0
   failure="false"
   loopprevent="false"
+  sleep 30
   while [[ "$status"  !=  "ACTIVE" ]]
   do
       status=$(cli -m csv -c 'app chart_release query name,update_available,human_version,human_latest_version,status' | grep ""$1"," | awk -F ',' '{print $2}')
