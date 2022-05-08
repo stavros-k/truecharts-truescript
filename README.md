@@ -7,7 +7,7 @@ This script can help with:
 - Mount / Unmount `PVC` storage
 - Prune Container Images.
 
-## Usage:
+## Options
 
 | Flag                | Parameters  | Description                                                                                                                                       |
 | ------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
