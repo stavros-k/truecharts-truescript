@@ -9,17 +9,17 @@ This script can help with:
 
 ## Options
 
-| Flag                | Parameters | Description                                                                                                                                       |
-| ------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `-m`                | None       | Initiates mounting feature, choose between unmounting and mounting PVC storage                                                                    |
-| `-r`                | None       | Opens a menu to select a TrueScript backup to restore that was taken on your `ix-applications` dataset                                            |
-| `-b <# of backups>` | Int        | Back-up your `ix-applications dataset`. You have specify a max number of backups to keep after -b                                                 |
-| `-i <appname>`      | String     | Add an application to ignore list.                                                                                                                |
-| `-t <seconds>`      | Int        | Set a custom timeout in seconds. This applies to `-u`, `-U` (Timeout from `Deploying` to `Active`) and `-m` (Timeout from `Active` to `Stoppped`) |
-| `-s`                | None       | Sync Catalog                                                                                                                                      |
-| `-u`                | None       | Apply all application updates, **excluding** major verions                                                                                        |
-| `-U`                | None       | Apply all application updates, **including** major verions                                                                                        |
-| `-p`                | None       | Prune unused container images                                                                                                                     |
+| Flag | Usage Example  | Parameters | Description                                                                                                                                       |
+| :--: | :------------- | :--------: | :------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `-m` | `-m`           |    None    | Initiates mounting feature, choose between unmounting and mounting PVC storage                                                                    |
+| `-r` | `-r`           |    None    | Opens a menu to select a TrueScript backup to restore that was taken on your `ix-applications` dataset                                            |
+| `-b` | `-b 14`        |    Int     | Back-up your `ix-applications dataset`. You have specify a max number of backups to keep after -b                                                 |
+| `-i` | `-i nextcloud` |   String   | Add an application to ignore list.                                                                                                                |
+| `-t` | `-i 600`       |    Int     | Set a custom timeout in seconds. This applies to `-u`, `-U` (Timeout from `Deploying` to `Active`) and `-m` (Timeout from `Active` to `Stoppped`) |
+| `-s` | `-s`           |    None    | Sync Catalog                                                                                                                                      |
+| `-u` | `-u`           |    None    | Apply all application updates, **excluding** major verions                                                                                        |
+| `-U` | `-U`           |    None    | Apply all application updates, **including** major verions                                                                                        |
+| `-p` | `-p`           |    None    | Prune unused container images                                                                                                                     |
 
 ## Examples
 
