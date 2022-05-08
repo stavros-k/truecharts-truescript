@@ -240,24 +240,32 @@ test_and_revert(){
   ## $3 = set to the status before update
   SECONDS=0
   failure="false"
+  loopprevent="false"
   while [[ "$status"  !=  "ACTIVE" ]]
   do
       status=$(cli -m csv -c 'app chart_release query name,update_available,human_version,human_latest_version,status' | grep ""$1"," | awk -F ',' '{print $2}')
       if [[ "$status"  ==  "STOPPED" ]]; then
           break
       elif [[ "$SECONDS" -ge "$timeout" && "$status"  ==  "DEPLOYING" ]]; then
-          echo -e "Error: Run Time($SECONDS) has exceeded Timeout($timeout)\nIf this is a slow starting application, set a higher time with -t\nIf this applicaion is always DEPLOYING, you can disable all probes under the Healthcheck Probes Liveness section in the edit configuration\nReverting update..."
+          echo -e "Error: Run Time($SECONDS) for $1 has exceeded Timeout($timeout)\nIf this is a slow starting application, set a higher time with -t\nIf this applicaion is always DEPLOYING, you can disable all probes under the Healthcheck Probes Liveness section in the edit configuration\nReverting update..."
           failure="true"
-          break
+          [[ "$failure"  ==  "true" ]] && midclt call chart.release.rollback "$1" "{\"item_version\": \"$2\"}" &> /dev/null
+          if [[ "$loopprevent" == "true" ]]
+            echo "Returing $1 to STOPPED state due to timeout after rollback.." && midclt call chart.release.scale "$n" '{"replica_count": 0}' &> /dev/null && echo "Stopped"|| echo -e "FAILED"
+          if [[ "$3"  ==  "STOPPED" ]]; then
+            loopprevent="true"
+            continue
+          else
+            break
+          fi
       elif [[ "$status"  ==  "DEPLOYING" ]]; then
           sleep 15
           continue
       elif [[ "$status"  ==  "ACTIVE" && "$3"  ==  "STOPPED" ]]; then
-          echo "Returing to STOPPED state.." && midclt call chart.release.scale "$n" '{"replica_count": 0}' &> /dev/null && echo "Stopped"|| echo -e "FAILED"
+          echo "Returing $1 to STOPPED state.." && midclt call chart.release.scale "$n" '{"replica_count": 0}' &> /dev/null && echo "Stopped"|| echo -e "FAILED"
           break
       fi
   done
-  [[ "$failure"  ==  "true" ]] && midclt call chart.release.rollback "$1" "{\"item_version\": \"$2\"}" &> /dev/null
 }
 export -f prune
 
