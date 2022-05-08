@@ -30,11 +30,11 @@ bash /mnt/POOLNAME/PATH/TO/SCRIPT/truescript.sh -b 14 -i portainer -i nextcloud 
 
 *Explantion*:
 - `-b 14` Will keep up to 14 snapshots of your ix-applications dataset. Deleting oldest backups that exceed the `14` target.
-- `-i portainer` Will ignore updates for the app named `portainer`.
-- `-i nextcloud` Will ignore updates for the app named `nextcloud`.
-- `-t 600` Will wait for `600` seconds, until an app goes from `Deploying` to `Active` when updating. (or until an app goes from `Active` to `Stopped` when mounting PVC Storage).
+- `-i portainer` Will ignore updates for the application named `portainer`.
+- `-i nextcloud` Will ignore updates for the application named `nextcloud`.
+- `-t 600` Will wait for `600` seconds, until an application goes from `Deploying` to `Active` when updating. (or until an application goes from `Active` to `Stopped` when mounting PVC Storage).
 - `-s` Will sync the catalogs before checking for updates.
-- `-u` Update only apps that do NOT have **major** updates.
+- `-u` Update only applications that do NOT have **major** updates.
 - `-p` Prune container images.
 
 **Example for mounting `PVC` Storage**
