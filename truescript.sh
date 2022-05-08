@@ -247,6 +247,10 @@ test_and_revert(){
       status=$(cli -m csv -c 'app chart_release query name,update_available,human_version,human_latest_version,status' | grep ""$1"," | awk -F ',' '{print $2}')
       if [[ "$status"  ==  "STOPPED" ]]; then
           break
+      elif [[ "$status"  ==  "ACTIVE" && "$3"  ==  "STOPPED" ]]; then
+          echo "Returing $1 to STOPPED state.." && midclt call chart.release.scale "$n" '{"replica_count": 0}' &> /dev/null && echo "Stopped"|| echo -e "FAILED"
+          break
+
       elif [[ "$SECONDS" -ge "$timeout" && "$status"  ==  "DEPLOYING" ]]; then
           echo -e "Error: Run Time($SECONDS) for $1 has exceeded Timeout($timeout)\nIf this is a slow starting application, set a higher time with -t\nIf this applicaion is always DEPLOYING, you can disable all probes under the Healthcheck Probes Liveness section in the edit configuration\nReverting update..."
           failure="true"
@@ -262,9 +266,6 @@ test_and_revert(){
       elif [[ "$status"  ==  "DEPLOYING" ]]; then
           sleep 15
           continue
-      elif [[ "$status"  ==  "ACTIVE" && "$3"  ==  "STOPPED" ]]; then
-          echo "Returing $1 to STOPPED state.." && midclt call chart.release.scale "$n" '{"replica_count": 0}' &> /dev/null && echo "Stopped"|| echo -e "FAILED"
-          break
       fi
   done
 }
